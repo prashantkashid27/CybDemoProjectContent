@@ -1,0 +1,27 @@
+<center><h1>You have reserved your tickets</h1></center>
+
+<div class="container">
+    <h4>for the dates: </h4><br>
+        <li>Checked In Date :  {{selectedDates.checkedInDate}}</li>
+        <li>Checked Out Date :  {{selectedDates.checkedOutDate}}</li>
+      
+	  <div class="container">
+		<div class="row">
+			<input type="text" class="form-control" placeholder="enter date" ng-model="search">	
+		</div><br><br><br>
+		<div class="container">
+			<div class="row" ng-repeat="x in dateRangeArray | filter:search">
+				<div class="col-lg-8">
+					<img src={{x.desc[0].path}}>
+				</div>
+				
+				<div class="col-lg-2">
+					<label>{{x.desc[0].hotelName}}</label>
+				</div>
+				
+			</div>
+		</div>
+
+	  </div>
+
+</div>

@@ -1,0 +1,68 @@
+{
+	"dateImage" : [
+		{
+			"date" : "04-01-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/1.jpg",
+					"hotelName" : "novotel"
+				}
+			]
+		},
+		{
+			"date" : "04-02-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/2.jpg",
+					"hotelName" : "bikaner"
+				}
+			]
+		},
+		{
+			"date" : "04-03-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/3.jpg",
+					"hotelName" : "oberoy"
+				}
+			]
+		},
+		{
+			"date" : "04-04-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/4.jpg",
+					"hotelName" : "hytt"
+				}
+			]
+		},
+		{
+			"date" : "05-01-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/5.jpg",
+					"hotelName" : "vitthal kamat"
+				}
+			]
+		},
+		{
+			"date" : "05-02-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/6.jpg",
+					"hotelName" : "taj hotel"
+				}
+			]
+		},
+		{
+			"date" : "05-03-2017",
+			"desc" :[
+				{
+					"path":"assets/images/hotelRooms/4.jpg",
+					"hotelName" : "reddys"
+				}
+			]
+		}
+		
+	]
+}

@@ -1,0 +1,50 @@
+div.weekRow{
+	margin-bottom : 5px;
+}
+.box{
+    
+	display:inline-block;
+    text-align:center;
+    width:14.285%;
+    height: 50px;
+    border: 1px solid red; 
+	box-sizing: border-box;
+    padding:5px;
+	float: left;
+}
+
+.blankCell{
+	border : none;
+    background-color: white;
+}
+
+box:not(:last-child){
+	margin-right : 5px;
+}
+
+.disableCell {
+    opacity: 0.5;
+    
+}
+
+input.disableCell {
+    opacity: 0.5;
+}
+
+.selectedDateCell{
+    background-color: #c3d4e5;
+}
+
+
+@media only screen 
+  and (min-device-width: 768px) 
+  and (max-device-width: 1024px) 
+  and (-webkit-min-device-pixel-ratio: 1) {
+	  
+	  .div-right-class{
+		  margin-top : 0;
+		  margin-left : -150px;
+	  }
+
+}
+

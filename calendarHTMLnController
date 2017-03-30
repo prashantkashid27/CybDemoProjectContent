@@ -1,0 +1,715 @@
+calendar.html*************************************
+**************************************************
+
+<div class="row">
+    <div class="col-xs-6 col-sm-6 col-md-1 col-md-offset-1 col-lg-1 col-lg-offset-1 div-left-class">
+        <input type="image" src="assets/images/left.png" ng-click="getMonth('prev')" ng-disabled="(prevMonth == todaysDate)" ng-class="{'disableCell' : ( prevMonth == todaysDate )}"/>
+    </div>
+    
+    <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+        <div class="CurrentMonth">
+            <input type="image" 
+               src="assets/images/left.png" ng-click="getMonth('prev')" ng-disabled="(prevMonth == todaysDate)" ng-class="{'disableCell' : ( prevMonth == todaysDate )}"/>
+            <label>{{currentMonth + "  " + currentYear }} </label>
+			<input type="image"  
+               src="assets/images/right.png" ng-click="getMonth('next')"/>
+        </div>
+        <div class="AllWeeks weekRow">
+            <span class="day box">Sunday</span>
+            <span class="day box">Monday</span>
+            <span class="day box">Tuesday</span>
+            <span class="day box">Wednesday</span>
+            <span class="day box">Thursday</span>
+            <span class="day box">Friday</span>
+            <span class="day box">Saturday</span>
+			<span class="clearfix"></span>
+        </div>
+        <div class="eachWeek weekRow" ng-repeat="week in weeks">            
+            <span >
+                <button ng-click="reserveSeat($event, x.date, x)" class="btn box eachDay" ng-class="{'blankCell' : (x.digit=='') , 'disableCell' : (x.isDisabled ) ,'selectedDateCell':(x.isStartDate || x.isEndDate || dateInBtwn(x)) }" ng-disabled="(x.isDisabled )" ng-repeat="x in week track by $index">
+                    {{x.digit}}<br>
+                    {{x.status}}
+                </button>
+            </span>
+			<span class="clearfix"></span>
+        </div>
+    </div>
+    
+    <div class="col-xs-6 col-sm-6 col-md-1 col-lg-1 div-right-class">
+        <input type="image" src="assets/images/right.png" ng-click="getMonth('next')"/>
+    </div> 
+</div>
+
+<div style="padding-top:30px;">
+        <center><button class="btn" ng-click="confirmDates()" ng-disabled="!(dateRange.checkedInDate != '' && dateRange.checkedOutDate != '' )">confirm seat</button></center>
+</div>
+
+
+******************************************
+myController.js**************************
+****************************************
+
+app.controller("myController", function($scope, $http, $state, $log, sharedProperties, CalendarAvailabilityData){
+
+    var dayOfWeek = moment().startOf('month').day();
+    var daysInMonth = moment().daysInMonth();
+    $scope.currentDate = moment().format("DD");
+    $scope.currentMonth = moment().format("MMMM");
+    $scope.currentYear = moment().format("YYYY");
+    $scope.todaysDate = moment().format("MM-DD-YYYY");
+    
+    $scope.weeks = []; 
+    
+    $scope.nextMonth = moment().format("MM-DD-YYYY");
+    $scope.prevMonth = moment().format("MM-DD-YYYY");
+    
+    var flag = false;  
+    
+    var date = moment().startOf('month').format("MM-DD-YYYY");
+    var status = "";
+    var isDisabled = false; 
+    
+    if(sharedProperties.getDates()){
+        $scope.dateRange = sharedProperties.getDates();   
+        $scope.dateRangeObject = sharedProperties.getDatesObj();
+    }
+    else{
+        $scope.dateRange = {
+            checkedInDate : "",
+            checkedOutDate : ""
+        }
+        $scope.dateRangeObject = {
+            checkedInDateObj : {},
+            checkedOutDateObj : {}
+        }
+    }
+
+    
+     /* to get the json data*/
+    
+    /*$http.get("http://localhost:3000/data/data.json")
+    .then(function mySucces(response) {
+        
+        $scope.monthsData = response.data;
+        console.log($scope.monthsData);
+        $scope.createMonth();
+        console.log(response.data.months[0].dates[5].isAvailable);
+    
+    }, function myError(response) {
+        $scope.myWelcome = response.statusText;
+        console.log(response.statusText);
+    });*/
+    
+    $scope.createMonth = function(){
+        var startDate = 1;
+        var digit = 1;
+        //status = "";
+        isDisabled = false; 
+        
+        var k = 0;
+        console.log($scope.monthsData);
+        console.log($scope.currentMonth);
+        while($scope.currentMonth != $scope.monthsData.months[k].name){
+            k++;
+        }
+        console.log(k);
+        console.log($scope.monthsData.months[k].dates.length);
+        
+        for(var i=0;i<6;i++) {
+            var eachWeek = [];
+            
+            for(var j=0;j<7;j++) {
+                if(dayOfWeek > j && i == 0){
+                    eachWeek[j] = { 
+                        "digit" : "",
+                        "date" : "",
+                        "status" : "",
+                        "isDisabled" : true,
+                        "isStartDate" : false,
+                        "isEndDate" : false
+                    }
+                }
+                else{
+                    if(digit <= daysInMonth){
+                        if(date == $scope.todaysDate){
+                            status = "Today";
+                        }
+                        
+                        if(moment($scope.todaysDate).isAfter(moment(date))){
+                            isDisabled = true;
+                        }
+                        
+                        for(var l=0;l<$scope.monthsData.months[k].dates.length;l++){
+                            if(date == $scope.monthsData.months[k].dates[l].date){
+                                isDisabled = true;
+                            }
+                        }
+                        
+                        eachWeek[j] = {
+                            "digit" : digit++,
+                            "date" : date,
+                            "status" : status,
+                            "isDisabled" : isDisabled,
+                            "isStartDate" : false,
+                            "isEndDate" : false
+                        };
+                        
+                        if(date == $scope.dateRange.checkedInDate){
+                            console.log("in checkd in date startDate and status");
+                            eachWeek[j].isStartDate = true;
+                            eachWeek[j].status = "startDate";
+                            $scope.dateRange.checkedInDate = eachWeek[j].date;
+                        }
+                        if(date == $scope.dateRange.checkedOutDate){
+                            console.log("in checkd out date EndDate and status");
+                            eachWeek[j].isEndDate = true;
+                            eachWeek[j].status = "EndDate";
+                            $scope.dateRange.checkedOutDate = eachWeek[j].date;
+                        }
+                        
+                        status = "";
+                        isDisabled = false;
+                        date = moment(date, "MM-DD-YYYY").add(1, 'day').format("MM-DD-YYYY");
+                        
+                    }
+                }
+            }
+            $scope.weeks.push(eachWeek);
+            console.log("weeks"+$scope.weeks[0][0].isDisabled);
+        }
+        console.log($scope.weeks);
+    };
+    
+    $scope.getCalendarAvailabilityData = function() {
+        var promise = CalendarAvailabilityData.getCalendarData();
+        promise.then(function(response) {
+            
+            $scope.monthsData = response.data;
+            console.log($scope.monthsData);
+            console.log(response.data);
+            $scope.createMonth();
+        },
+        function(error) {
+            $log.error('failure loading calendarData', error);
+        });
+    };
+  
+    $scope.getCalendarAvailabilityData();
+    
+    
+    $scope.getMonth = function(whichMonth){
+    
+        $scope.weeks = [];
+        
+        if(whichMonth == 'next'){
+            $scope.nextMonth = moment($scope.nextMonth, "MM-DD-YYYY").add(1, 'month').format("MM-DD-YYYY");
+            $scope.currentMonth = moment($scope.nextMonth, "MM-DD-YYYY").format("MMMM");
+            $scope.currentYear = moment($scope.nextMonth, "MM-DD-YYYY").format("YYYY");
+            
+            $scope.prevMonth = $scope.nextMonth;
+            
+            dayOfWeek = moment($scope.nextMonth, "MM-DD-YYYY").startOf('month').day();
+            daysInMonth = moment($scope.nextMonth, "MM-DD-YYYY").daysInMonth();
+            
+        }
+        else if(whichMonth == 'prev'){
+            
+            $scope.prevMonth = moment($scope.prevMonth, "MM-DD-YYYY").subtract(1, 'month').format("MM-DD-YYYY");
+            $scope.currentMonth = moment($scope.prevMonth, "MM-DD-YYYY").format("MMMM");
+            $scope.currentYear = moment($scope.prevMonth, "MM-DD-YYYY").format("YYYY");
+            
+            $scope.nextMonth = $scope.prevMonth;
+            
+            dayOfWeek = moment($scope.prevMonth, "MM-DD-YYYY").startOf('month').day();
+            daysInMonth = moment($scope.prevMonth, "MM-DD-YYYY").daysInMonth();
+            
+            date = moment(date, "MM-DD-YYYY").subtract(2, 'month').format("MM-DD-YYYY");
+            
+        }
+        
+        $scope.createMonth();
+    
+    }  
+
+    $scope.compareCheckInOut = function(date){
+        console.log("date = ==== =="+date);
+        console.log(moment(date).format("MM"));
+        console.log(moment($scope.weeks[1][1].date).format("MM"));
+        
+        if(moment(date).format("MM") != moment($scope.weeks[1][1].date).format("MM")){
+            
+            $scope.dateRangeObject.checkedOutDateObj.isStartDate = false;
+            $scope.dateRangeObject.checkedOutDateObj.status = "";
+            
+            $scope.dateRangeObject.checkedInDateObj.isEndDate = false;
+            $scope.dateRangeObject.checkedInDateObj.status = "";
+            
+            return true;
+            
+        }
+        else{
+        
+            for(var i=0;i<6;i++) {
+                for(var j=0;j<7;j++) {
+                    if($scope.weeks[i][j].date == date){
+                        console.log($scope.weeks[i][j]);   
+                        return $scope.weeks[i][j];
+                    }
+                }
+            }
+        }
+    }
+    
+    $scope.reserveSeat = function(event, selectedDate, selectedDateObj){
+     
+        console.log("clicked");
+        console.log(event);
+        console.log(selectedDate);
+         
+        if(flag == false){
+            
+            console.log("***************")
+            console.log($scope.weeks[0][0]);
+            
+            selectedDateObj.isStartDate = true;
+            selectedDateObj.status = "startDate";
+            
+            /*  if clicked on same date---
+            */
+            if($scope.dateRange.checkedInDate == selectedDate){
+                if($scope.dateRange.checkedOutDate != ""){
+                    $scope.dateRange.checkedInDate = "";
+                    $scope.dateRangeObject.checkedInDateObj.isStartDate = false;
+                    $scope.dateRangeObject.checkedOutDateObj.isEndDate = false;
+                    
+                    
+                    if($scope.compareCheckInOut($scope.dateRange.checkedInDate) == true){
+                           $scope.compareCheckInOut($scope.dateRange.checkedInDate);
+                    }
+                    else{
+                        //get the Object of checkout date
+                    var checkDateObj = $scope.compareCheckInOut($scope.dateRange.checkedOutDate);
+                    
+                    console.log("resetted all dates");
+                    selectedDateObj.isStartDate = false;
+                    selectedDateObj.status = "";  
+                    checkDateObj.isEndDate = false;
+                    checkDateObj.status = "";
+                    }
+                    
+                }
+                else{
+                    $scope.dateRange.checkedInDate = selectedDate;
+                    selectedDateObj.isStartDate = true;
+                    selectedDateObj.status = "startDate";
+
+                }
+                
+            }
+            else{
+                    if($scope.dateRange.checkedInDate != ""){
+                        //for check in date---clear properties
+                        if($scope.compareCheckInOut($scope.dateRange.checkedInDate) == true){
+                           $scope.compareCheckInOut($scope.dateRange.checkedInDate);
+                        }
+                        else{
+                            var checkDateObj = $scope.compareCheckInOut($scope.dateRange.checkedInDate);
+
+                            console.log("undefined given 1 ");
+                            //get the Object of checkIn date and clear all values
+                            checkDateObj.isStartDate = false;
+                            console.log("undefined given 2 ");
+                            checkDateObj.status = "";
+                        }
+                        
+
+                    }
+
+                    if($scope.dateRange.checkedOutDate != ""){
+                        if($scope.compareCheckInOut($scope.dateRange.checkedOutDate) == true){
+                            $scope.compareCheckInOut($scope.dateRange.checkedOutDate)
+                        }
+                        else{
+                            //for check out date---clear properties
+                            var checkDateObj = $scope.compareCheckInOut($scope.dateRange.checkedOutDate);
+
+                            //get the Object of checkIn date and clear all values
+                            checkDateObj.isEndDate = false;
+                            checkDateObj.status = "";
+                        }
+                        
+
+                    }
+                
+                if($scope.dateRange.checkedOutDate == selectedDate){
+                    $scope.dateRangeObject.checkedOutDateObj.isStartDate = true;
+                    $scope.dateRangeObject.checkedOutDateObj.status = "startDate";
+                }
+                else{
+                    
+                    $scope.dateRangeObject.checkedOutDateObj.isEndDate = false;
+                    $scope.dateRangeObject.checkedOutDateObj.status = "";
+                }
+                
+                console.log("check in date");
+                $scope.dateRange.checkedInDate = selectedDate;
+                $scope.dateRangeObject.checkedInDateObj = selectedDateObj;
+                $scope.dateRangeObject.checkedInDateObj.status = "startDate";
+                $scope.dateRange.checkedOutDate = "";
+                flag = true;
+                
+                
+            }
+            
+        }
+        
+        else{
+            
+            if($scope.dateRange.checkedInDate == selectedDate){
+                
+                //deselect startDate........
+                selectedDateObj.isStartDate = false;
+                selectedDateObj.status = "";
+                flag = false;
+                $scope.dateRange.checkedInDate = "";
+                $scope.dateRange.checkedOutDate = "";
+                
+
+            }
+            else{
+                if(moment($scope.dateRange.checkedInDate).isAfter(selectedDate)){
+                
+                    if($scope.compareCheckInOut($scope.dateRange.checkedInDate) == true){
+                           $scope.compareCheckInOut($scope.dateRange.checkedInDate);
+                    }
+                    else{
+                        var checkDateObj = $scope.compareCheckInOut($scope.dateRange.checkedInDate);
+                    
+                        //get the Object of checkIn date and clear all values
+                        checkDateObj.isStartDate = false;
+                        checkDateObj.status = "";
+
+
+                        $scope.dateRange.checkedInDate = selectedDate;
+                        $scope.dateRange.checkedOutDate = "";
+                        selectedDateObj.isStartDate = true;
+                        selectedDateObj.status = "startDate";
+                    }
+                    console.log("check IN date");
+                    flag = true;
+
+                }
+                else{
+                    selectedDateObj.isEndDate = true;
+                    selectedDateObj.status = "EndDate";
+
+                    console.log("check out date");
+
+                    $scope.dateRange.checkedOutDate = selectedDate;
+                    $scope.dateRangeObject.checkedOutDateObj = selectedDateObj;
+                    flag = false;
+
+                }
+            }
+        }
+    }
+    
+    $scope.confirmDates = function(){
+        
+        sharedProperties.addDate($scope.dateRange);
+        sharedProperties.addDateObj($scope.dateRangeObject);
+        
+        $state.go('resultPage');
+    }
+    
+    $scope.disabledDateFlag = true;
+    $scope.disableDateArray = [];
+   
+    $scope.dateInBtwn = function(dateObj){        
+        
+        if( (moment($scope.dateRange.checkedInDate).isBefore(dateObj.date)) &&
+            (moment($scope.dateRange.checkedOutDate).isAfter(dateObj.date)) ){
+           
+                return true;
+        }
+    }
+    
+    
+});
+
+/*if( (moment($scope.dateRange.checkedInDate).isBefore(dateObj.date)) &&
+            (moment($scope.dateRange.checkedOutDate).isAfter(dateObj.date)) && 
+            ($scope.disabledDateFlag) ){
+            
+            console.log(dateObj);
+            $scope.disableDateArray.push(dateObj);
+            
+            if(dateObj.isDisabled == true){
+                $scope.dateRangeObject.checkedInDateObj.isStartDate = false;
+                $scope.dateRangeObject.checkedInDateObj.status = "";
+                $scope.dateRangeObject.checkedOutDateObj.isEndDate = false;
+                $scope.dateRangeObject.checkedOutDateObj.status = "";
+                
+                $scope.disabledDateFlag = false;
+                
+                return false;
+            }
+            else
+                return true;
+        }
+        else{
+            if(dateObj.date == $scope.dateRange.checkedOutDate){
+                $scope.disabledDateFlag = true;
+            }
+            return false;
+        }*/
+            
+******************************************************
+calendar.css*******************************************
+*****************************************************
+div.weekRow{
+	margin-bottom : 5px;
+}
+.box{
+    
+	display:inline-block;
+    text-align:center;
+    width:14.285%;
+    height: 50px;
+    border: 1px solid red; 
+	box-sizing: border-box;
+    padding-top:5px;
+	float: left;
+    font-size:15px;
+    
+}
+
+.div-left-class input{
+    width:95%; 
+    margin-top:150px;
+}
+
+.div-right-class input{
+    width:95%; 
+    margin-top:150px;
+}
+
+.CurrentMonth{
+    text-align:center; 
+    background-color:#c7c7c7; 
+    padding:1px 0; 
+    margin: 4px 0;
+}
+
+.CurrentMonth label{
+    font-size: 55px;
+}
+
+.blankCell{
+	border : none;
+    background-color: white;
+}
+
+
+box:not(:last-child){
+	margin-right : 5px;
+}
+
+.disableCell {
+    opacity: 0.5;
+    
+}
+
+input.disableCell {
+    opacity: 0.5;
+}
+
+.selectedDateCell{
+    background-color: #c3d4e5;
+}
+
+.div-right-class{
+      margin-top : 0;
+}
+
+.CurrentMonth input{
+	display:none;
+}
+
+.hotel-image-class{
+    margin:10px; 
+    padding:5px;
+}
+
+.hotelName-class{
+    padding-top:80px;
+}
+
+.hotel-image-eachDate-class{
+    border:1px solid black;
+    padding:5px 0;
+}
+
+@media only screen 
+    and (max-width: 511px) {
+    
+    .div-left-class{
+	   display:none;
+    }
+	.div-left-class input{
+        margin:0 !important;
+    }
+	.div-right-class{
+        display:none;
+    }
+	.div-right-class input{
+        margin:0 !important;
+    }
+	.AllWeeks .box{
+        font-size:9px;
+        padding-top:16px;
+    }
+    .eachWeek .box{
+        font-size: 15px;
+        padding-top: 5px;
+    }
+    
+	.CurrentMonth input{
+		display:inline-block;
+		width:15%;
+		position:relative;
+		top:8px;
+	}
+	.CurrentMonth label{
+        display:inline-block;
+        width:62%;
+        font-size: 35px;
+    }
+}
+
+
+@media only screen 
+  and (min-device-width: 512px) 
+  and (max-device-width: 992px) {
+    
+    .div-left-class{
+	   display:none;
+    }
+	.div-left-class input{
+        margin:0 !important;
+    }
+	.div-right-class{
+        display:none;
+    }
+	.div-right-class input{
+        margin:0 !important;
+    }
+	.box{
+        font-size: 18px;
+        padding-top: 10px;
+        height: 65px;
+    }
+	.CurrentMonth input{
+		display:inline-block;
+		width:11%;
+		position:relative;
+		top:14px;
+	}
+	.CurrentMonth label{
+        display:inline-block;
+        width:70%;
+        font-size: 60px;
+    }
+}
+
+**********************************************************
+resultController.js***********************************
+**************************************************
+
+app.controller("resultController", function($scope, $http, $state, sharedProperties){
+    
+    $scope.selectedDates = sharedProperties.getDates();
+    console.log($scope.selectedDates.checkedInDate);
+    console.log($scope.selectedDates.checkedOutDate);
+    
+	 /* to get the json data*/
+    console.log("before call");
+	
+    $http.get("http://localhost:3000/data/date_Image.json")
+    .then(function mySucces(response) {
+        
+        $scope.dateImageData = response.data;
+        console.log($scope.dateImageData);
+        console.log($scope.dateImageData.dateImage[0]);
+		$scope.getDateRange();
+		
+    }, function myError(response) {
+        $scope.dateImageErrorStatus = response.statusText;
+        console.log($scope.dateImageErrorStatus);
+    });
+    
+    console.log("after call");
+	
+	$scope.dateRangeArray = [];
+	
+	$scope.getDateRange = function(){
+		
+		console.log($scope.dateImageData.dateImage.length)
+		for(var i=0; i<$scope.dateImageData.dateImage.length; i++){
+			if($scope.selectedDates.checkedInDate == $scope.dateImageData.dateImage[i].date){
+				$scope.dateRangeArray.push($scope.dateImageData.dateImage[i]);
+			}
+			if($scope.selectedDates.checkedOutDate == $scope.dateImageData.dateImage[i].date){
+				$scope.dateRangeArray.push($scope.dateImageData.dateImage[i]);
+			}
+			if((moment($scope.selectedDates.checkedInDate).isBefore($scope.dateImageData.dateImage[i].date)) &&
+			(moment($scope.selectedDates.checkedOutDate).isAfter($scope.dateImageData.dateImage[i].date)))	{
+                $scope.dateRangeArray.push($scope.dateImageData.dateImage[i]);
+            }
+		}
+		console.log($scope.dateRangeArray);
+		
+	};
+});
+
+**********************************************
+confrimTicketPage.html*************************
+**********************************************
+
+<center><h1>You have reserved your tickets</h1></center>
+
+<div class="container">
+    <hr>    
+    <div class="row">
+        <div class="col-sm-6">
+            <h4>Check-In :  {{selectedDates.checkedInDate}}</h4>
+        </div> 
+        <div class="col-sm-6">
+            <h4>Check-Out :  {{selectedDates.checkedOutDate}}</h4>
+        </div>
+     </div>   
+    <hr>
+    <div class="container">
+		<div class="row">
+            <div class="col-lg-6 col-lg-offset-3">     
+			     <input type="text" class="form-control" placeholder="enter date to view the hotel room description" ng-model="search">	
+            </div>
+		</div>
+        <br><br><br>
+		<div class="container">
+			<div class="row hotel-image-class" ng-repeat="EachDateObj in dateRangeArray | filter:search">
+                <div class="row hotel-image-eachDate-class" ng-repeat="x in EachDateObj.desc">
+                    <div class="col-lg-4 col-lg-offset-2">
+                        <img src={{x.path}}>
+                    </div>
+
+                    <div class="col-lg-2 col-lg-offset-1 hotelName-class">
+                        <label>{{x.hotelName}}</label>
+                    </div>
+                </div>
+			</div>
+		</div>
+    </div>
+</div>
+
+*******************************************

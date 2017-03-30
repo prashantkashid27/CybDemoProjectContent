@@ -1,0 +1,48 @@
+<div class="row">
+    <div class="col-xs-6 col-sm-6 col-md-1 col-md-offset-1 col-lg-1 col-lg-offset-1 div-left-class">
+        
+        <input type="image" style="width:95%; margin-top:150px;" 
+               src="assets/images/left.png" ng-click="getMonth('prev')" ng-disabled="(prevMonth == todaysDate)" ng-class="{'disableCell' : ( prevMonth == todaysDate )}"/>
+        
+    </div>
+    
+    <div class="col-xs-12 col-sm-12 col-md-8 col-lg-8">
+        <div class="CurrentMonth" style="text-align:center; background-color:#c7c7c7; padding:1px 0; margin: 4px 0;">
+            <input type="image" 
+               src="assets/images/left.png" ng-click="getMonth('prev')" ng-disabled="(prevMonth == todaysDate)" ng-class="{'disableCell' : ( prevMonth == todaysDate )}"/>
+			<h2>{{currentMonth + "  " + currentYear }} </h2>
+			<input type="image"  
+               src="assets/images/right.png" ng-click="getMonth('next')"/>
+        </div>
+        <div class="AllWeeks weekRow">
+            <span class="day box">Sunday</span>
+            <span class="day box">Monday</span>
+            <span class="day box">Tuesday</span>
+            <span class="day box">Wednesday</span>
+            <span class="day box">Thursday</span>
+            <span class="day box">Friday</span>
+            <span class="day box">Saturday</span>
+			<span class="clearfix"></span>
+        </div>
+        <div class="eachWeek weekRow" ng-repeat="week in weeks">            
+            <span >
+                <button ng-click="reserveSeat($event, x.date, x)" class="btn box eachDay" ng-class="{'blankCell' : (x.digit=='') , 'disableCell' : (x.isDisabled ) ,'selectedDateCell':(x.isStartDate || x.isEndDate || dateInBtwn(x.date)) }" ng-disabled="(x.isDisabled )" ng-repeat="x in week track by $index">
+                    {{x.digit}}<br>
+                    {{x.status}}
+                </button>
+            </span>
+			<span class="clearfix"></span>
+        </div>
+    </div>
+    
+    <div class="col-xs-6 col-sm-6 col-md-1 col-lg-1 div-right-class">
+        
+        <input type="image" style="width:95%; margin-top:150px;" 
+               src="assets/images/right.png" ng-click="getMonth('next')"/>
+    
+    </div> 
+</div>
+
+<div style="padding-top:30px;">
+        <center><button class="btn" ng-click="confirmDates()" ng-disabled="!(dateRange.checkedInDate != '' && dateRange.checkedOutDate != '' )">confirm seat</button></center>
+</div>
